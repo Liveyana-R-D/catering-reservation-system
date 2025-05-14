@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Profile</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background-color: #f6f6f6;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    .profile-container {
+      background-color: #fff;
+      border-radius: 10px;
+      padding: 20px;
+      width: 400px;
+      margin: 0 auto;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .profile-container h2 {
+      text-align: center;
+      color: #333;
+    }
+
+    .profile-container p {
+      font-size: 16px;
+      color: #666;
+      margin-bottom: 20px;
+    }
+
+    .profile-container button {
+      width: 100%;
+      padding: 10px 20px;
+      background-color: #3498db;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    .profile-container button:hover {
+      background-color: #2980b9;
+    }
+
+    .logout button {
+      background-color: #e74c3c;
+    }
+
+    .logout button:hover {
+      background-color: #c0392b;
+    }
+  </style>
+  <link rel="icon" type="image/x-icon" href="food.avif">
+</head>
+<body>
+  <h1>Admin Profile</h1>
+
+  <div class="profile-container">
+    <h2>Welcome, Admin</h2>
+    <p id="email">Email: Loading...</p>
+    <p>Role: Admin</p>
+    
+    <div class="logout">
+      <button onclick="logout()">🚪 Logout</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+    import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+    import { auth } from "./js/firebase-config.js";
+
+    // Fetch user details (email) from Firebase Auth
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        document.getElementById("email").textContent = `Email: ${user.email}`;
+      } else {
+        window.location.href = "index.html"; // Redirect to login if no user is logged in
+      }
+    });
+
+    // Logout Function
+    window.logout = async () => {
+      try {
+        await signOut(auth);
+        alert("✅ Logged out successfully!");
+        window.location.href = "index.html";
+      } catch (error) {
+        alert("❌ Logout failed: " + error.message);
+      }
+    };
+  </script>
+</body>
+</html>

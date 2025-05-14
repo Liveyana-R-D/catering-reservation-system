@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>View Products</title>
+  <link rel="icon" type="image/x-icon" href="food.avif">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+      padding: 2rem;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .products-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    .product-card {
+      background-color: #fff;
+      border-radius: 10px;
+      padding: 1rem;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      text-align: center;
+    }
+
+    .product-card h3 {
+      margin-bottom: 0.5rem;
+    }
+
+    .product-card p {
+      color: #666;
+      margin-bottom: 1rem;
+    }
+
+    .product-card input[type="number"] {
+      width: 60px;
+      padding: 0.3rem;
+      margin-bottom: 0.8rem;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    .product-card button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 0.6rem 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .product-card button:hover {
+      background-color: #3e8e41;
+    }
+
+    .top-links {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .top-links a {
+      text-decoration: none;
+      margin: 0 1rem;
+      color: #2196F3;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-links">
+    <a href="user-dashboard.html">← Dashboard</a>
+    <a href="cart.html">🛒 View Cart</a>
+  </div>
+
+  <h2>🎂 Available Items</h2>
+  <div class="products-container" id="productsContainer"></div>
+
+  <script type="module">
+    import { db, auth } from './js/firebase-config.js';
+    import { collection, getDocs, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+    import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
+
+    const container = document.getElementById('productsContainer');
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "index.html";
+        return;
+      }
+
+      const snapshot = await getDocs(collection(db, "products"));
+      container.innerHTML = "";
+
+      snapshot.forEach(docSnap => {
+        const product = docSnap.data();
+        const id = docSnap.id;
+
+        const card = document.createElement("div");
+        card.className = "product-card";
+
+        card.innerHTML = `
+          <h3>${product.name}</h3>
+          <p>₹${product.price}</p>
+          <p>${product.description}</p>
+          <label>Quantity: 
+            <input type="number" min="1" value="1" id="qty_${id}">
+          </label><br/>
+          <button onclick="addToCart('${id}', '${product.name}', ${product.price})">Add to Cart</button>
+        `;
+        container.appendChild(card);
+      });
+    });
+
+    window.addToCart = async (productId, name, price) => {
+      const user = auth.currentUser;
+      if (!user) {
+        alert("Please login to add to cart.");
+        return;
+      }
+
+      const qtyInput = document.getElementById(`qty_${productId}`);
+      const quantity = parseInt(qtyInput.value);
+
+      if (quantity < 1 || isNaN(quantity)) {
+        alert("Please enter a valid quantity.");
+        return;
+      }
+
+      const cartRef = doc(db, "cart", `${user.uid}_${productId}`);
+      const cartSnap = await getDoc(cartRef);
+
+      if (cartSnap.exists()) {
+        alert("Already in cart. You can update it from 'My Cart'.");
+      } else {
+        await setDoc(cartRef, {
+          userId: user.uid,
+          productId,
+          name,
+          price,
+          quantity,
+          total: price * quantity,
+          addedAt: new Date()
+        });
+        alert("Product added to cart!");
+      }
+    };
+  </script>
+</body>
+</html>

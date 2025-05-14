@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Cart</title>
+  <link rel="icon" type="image/x-icon" href="food.avif">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 2rem;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    table {
+      width: 100%;
+      max-width: 900px;
+      margin: auto;
+      background: #fff;
+      border-collapse: collapse;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+      padding: 1rem;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #f9b1c3;
+      color: white;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    button {
+      background-color: #e74c3c;
+      color: white;
+      padding: 6px 12px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #c0392b;
+    }
+
+    #placeOrderBtn {
+      margin-top: 1.5rem;
+      display: block;
+      padding: 10px 20px;
+      font-size: 16px;
+      background-color: #2ecc71;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    #placeOrderBtn:hover {
+      background-color: #27ae60;
+    }
+
+    .top-links {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .top-links a {
+      text-decoration: none;
+      margin: 0 1rem;
+      color: #3498db;
+      font-weight: bold;
+    }
+
+    .empty {
+      text-align: center;
+      font-size: 1.2rem;
+      color: gray;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-links">
+    <a href="user-dashboard.html">← Dashboard</a>
+    <a href="view-products.html">View Products</a>
+    <a href="my-orders.html">My Orders</a>
+  </div>
+
+  <h2>🛒 My Cart</h2>
+
+  <div id="cartTableContainer"></div>
+  <button id="placeOrderBtn">Place Order</button>
+
+  <script type="module">
+    import { db, auth } from './js/firebase-config.js';
+    import { collection, getDocs, deleteDoc, doc, addDoc, query, where } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+    import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
+
+    const cartContainer = document.getElementById("cartTableContainer");
+    const placeOrderBtn = document.getElementById("placeOrderBtn");
+
+    let cartItems = [];
+    let userId = "";
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "index.html";
+        return;
+      }
+
+      userId = user.uid;
+
+      const q = query(collection(db, "cart"), where("userId", "==", userId));
+      const snapshot = await getDocs(q);
+
+      cartItems = [];
+      snapshot.forEach(docSnap => {
+        cartItems.push({ id: docSnap.id, ...docSnap.data() });
+      });
+
+      renderCart();
+    });
+
+    function renderCart() {
+      if (cartItems.length === 0) {
+        cartContainer.innerHTML = `<p class="empty">Your cart is empty!</p>`;
+        placeOrderBtn.style.display = 'none';
+        return;
+      }
+
+      placeOrderBtn.style.display = 'block';
+
+      let html = `<table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Price (₹)</th>
+            <th>Quantity</th>
+            <th>Total</th>
+            <th>Remove</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+      cartItems.forEach(item => {
+        html += `
+          <tr>
+            <td>${item.name}</td>
+            <td>${item.price}</td>
+            <td>${item.quantity}</td>
+            <td>${item.total}</td>
+            <td><button onclick="removeItem('${item.id}')">Remove</button></td>
+          </tr>
+        `;
+      });
+
+      html += `</tbody></table>`;
+      cartContainer.innerHTML = html;
+    }
+
+    window.removeItem = async (id) => {
+      await deleteDoc(doc(db, "cart", id));
+      cartItems = cartItems.filter(item => item.id !== id);
+      renderCart();
+    };
+
+    placeOrderBtn.addEventListener("click", async () => {
+      if (cartItems.length === 0) return;
+
+      const ordersRef = collection(db, "orders");
+
+      for (const item of cartItems) {
+        await addDoc(ordersRef, {
+          userId,
+          productId: item.productId,
+          name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+          total: item.total,
+          orderDate: new Date()
+        });
+        await deleteDoc(doc(db, "cart", item.id));
+      }
+
+      alert("Order placed successfully!");
+      cartItems = [];
+      renderCart();
+    });
+  </script>
+</body>
+</html>

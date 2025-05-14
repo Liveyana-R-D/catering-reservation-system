@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="css/admin-style.css" />
+  <link rel="icon" type="image/x-icon" href="food.avif">
+</head>
+<body>
+  <h2>Admin Dashboard</h2>
+
+  <div class="dashboard-container">
+    <div class="card" onclick="location.href='add-product.html'">
+      <h3>Add Product</h3>
+      <p>Add new catering items.</p>
+    </div>
+
+    <div class="card" onclick="location.href='manage-products.html'">
+      <h3>Manage Products</h3>
+      <p>Manage catering items.</p>
+    </div>
+
+    <div class="card" onclick="location.href='view-orders.html'">
+      <h3>View Orders</h3>
+      <p>Check placed orders from users.</p>
+    </div>
+
+    <div class="card" onclick="location.href='admin-profile.html'">
+      <h3>My Profile</h3>
+      <p>View and manage your profile.</p>
+    </div>
+
+    <div class="card logout" onclick="logout()">
+      <h3>Logout</h3>
+      <p>End session securely.</p>
+    </div>
+  </div>
+
+  <script type="module">
+  import { signOut } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js";
+  import { auth } from "./js/firebase-config.js"; // Make sure this path is correct
+
+  window.logout = async () => {
+    try {
+      await signOut(auth); // Use the imported `auth`, not getAuth()
+      alert("✅ Logged out successfully!");
+      window.location.href = "index.html";
+    } catch (error) {
+      alert("❌ Logout failed: " + error.message);
+    }
+  };
+</script>
+
+</body>
+</html>

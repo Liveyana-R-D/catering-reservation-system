@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Orders</title>
+  <link rel="icon" type="image/x-icon" href="food.avif">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f8f8f8;
+      padding: 2rem;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    table {
+      width: 100%;
+      max-width: 900px;
+      margin: auto;
+      background: #fff;
+      border-collapse: collapse;
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+      padding: 1rem;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+
+    th {
+      background-color: #f9b1c3;
+      color: white;
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .top-links {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .top-links a {
+      text-decoration: none;
+      margin: 0 1rem;
+      color: #3498db;
+      font-weight: bold;
+    }
+
+    .empty {
+      text-align: center;
+      font-size: 1.2rem;
+      color: gray;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-links">
+    <a href="user-dashboard.html">← Dashboard</a>
+    <a href="view-products.html">View Products</a>
+    <a href="cart.html">My Cart</a>
+  </div>
+
+  <h2>🧾 My Orders</h2>
+
+  <div id="ordersContainer"></div>
+
+  <script type="module">
+    import { db, auth } from './js/firebase-config.js';
+    import { collection, getDocs, query, where, orderBy } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js';
+    import { onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js';
+
+    const container = document.getElementById("ordersContainer");
+
+    onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        window.location.href = "index.html";
+        return;
+      }
+
+      const userId = user.uid;
+      const q = query(collection(db, "orders"), where("userId", "==", userId), orderBy("orderDate", "desc"));
+      const snapshot = await getDocs(q);
+
+      if (snapshot.empty) {
+        container.innerHTML = `<p class="empty">You haven't placed any orders yet.</p>`;
+        return;
+      }
+
+      let html = `<table>
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Quantity</th>
+            <th>Total Price (₹)</th>
+            <th>Date</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const date = new Date(data.orderDate.seconds * 1000).toLocaleString();
+        html += `
+          <tr>
+            <td>${data.name}</td>
+            <td>${data.quantity}</td>
+            <td>${data.total}</td>
+            <td>${date}</td>
+          </tr>
+        `;
+      });
+
+      html += `</tbody></table>`;
+      container.innerHTML = html;
+    });
+  </script>
+</body>
+</html>
