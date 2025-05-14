@@ -4,6 +4,13 @@ A web-based application that allows admins to promote and sell catering products
 
 ---
 
+## Live Demo
+You can check out the live page for this project at the following URL:
+
+[Live Demo](https://Liveyana-R-D.github.io/catering-reservation-system/)
+
+---
+
 ## 🔧 Technologies Used
 
 - **Frontend:** HTML, CSS, JavaScript  
@@ -96,9 +103,12 @@ You can host this project on:
 
 ---
 
+
+
 ## 👩‍🏫 Project By
 
 **Liveyana R D**  
-MCA Student | Web Developer Intern  
+
+Web Developer Intern  
 Catering Reservation and Ordering System - Unified Mentor Project 2025
 
